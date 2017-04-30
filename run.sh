@@ -1,6 +1,7 @@
 #!/bin/bash
 # Swoole Reload Demo
 # Swoole 热更新 示例
+# 青石 <www@qs5.org> http://www.qs5.org
 
 # php主程序文件名
 script_name='init.php'
