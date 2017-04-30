@@ -6,11 +6,15 @@
 script_name='init.php'
 # pid文件 请和 php 内设置一致
 run_pid_file='/tmp/swoole_reload_demo.pid'
+# 获取当前运行目录
+init_dir="$(cd "$(dirname "$0")" && pwd )"
 # 运行日志保存文件夹
 run_log_path="${init_dir}/logs"
-date_str=`date +%Y%m%d`
-init_dir="$(cd "$(dirname "$0")" && pwd )"
+# 脚本运行目录完整文件名
 script_path="${init_dir}/${script_name}"
+# 脚本运行时间
+date_str=`date +%Y%m%d`
+# 日志保存文件名
 log_file="${run_log_path}/${date_str}_$$.log"
 
 # 判断是否运行中 并获取进程pid
