@@ -9,7 +9,7 @@
 //**** 启动时配置 ****//
 
     // pid保存文件名
-    define('RUN_PID_FILE', '/tmp/swoole_reload_demo.pid');
+    define('RUN_PID_FILE', '/var/run/swoole_reload_demo.pid');
 
     // 定义根目录
     define('APP_ROOT', dirname(__FILE__) . '/');
