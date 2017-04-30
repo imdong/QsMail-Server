@@ -64,7 +64,11 @@ class Demo_Server
         // 如果是后台运行就重新保存pid
         $this->isRunStatus && file_put_contents(RUN_PID_FILE, $serv->master_pid);
 
-        echo "[Start] {$timeStr} master_pid: {$serv->master_pid}\n";
+        printf(
+            "[Start] %s master_pid: %s\n",
+            $timeStr,
+            $serv->master_pid
+        );
     }
 
     // 工作进程启动
@@ -75,9 +79,16 @@ class Demo_Server
 
         // 引入应用类文件
         include APP_ROOT . 'app.class.php';
-        $class_ver = App::ver();
 
-        echo "[WorkerStart:{$worker_id}] {$timeStr} master_pid: {$serv->master_pid}\nMian Ver: {$this->ver}\nClass Ver: {$class_ver}\n";
+        printf(
+            "[WorkerStart: %s] %s master_pid: %s\nMian Ver: %s\nClass Ver: %s\n",
+            $worker_id,
+            $timeStr,
+            $serv->master_pid,
+            $this->ver,
+            App::ver()
+        );
+
     }
 
     // 有客户端连接
@@ -94,7 +105,13 @@ class Demo_Server
         );
 
         // 输出客户端信息
-        echo "[Connect] {$this->cli_pool[$fd]['client_ip']}:{$this->cli_pool[$fd]['client_port']}\n";
+        IS_DEBUG && printf(
+            "[Connect] %s | %s:%s => %s\n",
+            $fd,
+            $this->cli_pool[$fd]['client_ip'],
+            $this->cli_pool[$fd]['client_port'],
+            $this->cli_pool[$fd]['username']
+        );
 
         // 回复客户端可以继续
         $serv->send($fd, "Hello [{$this->cli_pool[$fd]['username']}], Welcome!\r\n");
@@ -103,7 +120,8 @@ class Demo_Server
     // 断开连接
     public function onClose($serv, $fd, $from_id)
     {
-        echo "[Close] {$fd}\n";
+        // 输出调试记录
+        IS_DEBUG && printf("[Close] %s\n", $fd);
 
         // 删除消息记录
         unset($this->cli_pool[$fd]);
@@ -123,6 +141,13 @@ class Demo_Server
         if(preg_match('#^(?<cmd>[A-Za-z0-9_]+)(\s(?<par>[^$]+))?$#', $dataRow, $cmdInfo)){
             $cmd = 'cmd_' . trim($cmdInfo['cmd']);
             $par = empty($cmdInfo['par']) ? '' : $cmdInfo['par'];
+
+            // 输出调试记录
+            IS_DEBUG && printf(
+                "[%s] %s\n",
+                $this->cli_pool[$fd]['username'],
+                $cmdInfo['cmd']
+            );
 
             // 判断方法是否存在
             if(is_callable(array('App', $cmd), false, $callable_name)){
