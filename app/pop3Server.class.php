@@ -10,7 +10,7 @@
 /**
  * POP3服务基类
  */
-class POP3_Server
+class Pop3Server
 {
 
     /**
@@ -210,9 +210,8 @@ class POP3_Server
 
             }
 
-
-                // 发送消息到客户端
-                $this->sendMsg($fd, $retMsg, $retStatus);
+            // 发送消息到客户端
+            $this->sendMsg($fd, $retMsg, $retStatus);
 
 
             // 判断方法是否存在
