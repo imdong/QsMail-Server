@@ -1,15 +1,23 @@
 <?php
 /**
- * Swoole 热更新功能 简单示例
+ * QsMail POP3 Server
+ * 基于Swoole的POP3邮件服务器
  *
  * @author      青石 <www@qs5.org>
- * @copyright   Swoole Reload Demo 2017-4-30 09:47:10
+ * @copyright   QsMail POP3 Server
  */
+
+//**** 输出版本相关信息 ****//
+echo "+----------------------------+\n";
+echo "|     QsMail POP3 Server     |\n";
+echo "+----------------------------+\n";
+echo "|     http://www.qs5.org     |\n";
+echo "+----------------------------+\n";
 
 //**** 启动时配置 ****//
 
     // pid保存文件名
-    define('RUN_PID_FILE', '/var/run/swoole_reload_demo.pid');
+    define('RUN_PID_FILE', '/var/run/qsmail_pop3_server.pid');
 
     // 定义根目录
     define('APP_ROOT', dirname(__FILE__) . '/');
@@ -59,10 +67,10 @@
 //**** 启动进程 ****//
 
     // 引入进程文件
-    require 'demoServer.class.php';
+    require 'pop3Server.class.php';
 
     // 启动服务器
-    $server = new Demo_Server($isRun, $log_file);
+    $server = new POP3_Server($isRun, $log_file);
 
 //**** 结束前处理 ****//
 

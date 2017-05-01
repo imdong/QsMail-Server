@@ -1,18 +1,19 @@
 <?php
 /**
- * Swoole 热更新功能 简单示例
+ * QsMail POP3 Server
+ * 基于Swoole的POP3邮件服务器
  *
  * @author      青石 <www@qs5.org>
- * @copyright   Swoole Reload Demo 2017-4-30 09:47:10
+ * @copyright   QsMail POP3 Server
  */
 
 /**
- * 主功能类
+ * POP3服务基类
  */
-class Demo_Server
+class POP3_Server
 {
 
-    private $ver = '1.0.m170430.b';
+    private $ver = '0.1.1718.1a';
 
     /**
      * 运行时状态 / 是否后台运行
@@ -35,7 +36,7 @@ class Demo_Server
         $this->isRunStatus = $isRun;
 
         // 创建 Swoole 对象
-        $this->serv = new swoole_server("0.0.0.0", 1082);
+        $this->serv = new swoole_server("0.0.0.0", 110);
 
         // 设置默认设置
         $this->serv->set(array(
@@ -59,11 +60,13 @@ class Demo_Server
     // 进程启动
     public function onStart($serv)
     {
+        // 获取启动时间
         $timeStr = date('Y/m/d H:i:s');
 
         // 如果是后台运行就重新保存pid
         $this->isRunStatus && file_put_contents(RUN_PID_FILE, $serv->master_pid);
 
+        // 输出运行信息
         printf(
             "[Start] %s master_pid: %s\n",
             $timeStr,
@@ -80,6 +83,7 @@ class Demo_Server
         // 引入应用类文件
         include APP_ROOT . 'app.class.php';
 
+        // 输出调试信息
         printf(
             "[WorkerStart: %s] %s master_pid: %s\nMian Ver: %s\nClass Ver: %s\n",
             $worker_id,
@@ -106,15 +110,14 @@ class Demo_Server
 
         // 输出客户端信息
         IS_DEBUG && printf(
-            "[Connect] %s | %s:%s => %s\n",
-            $fd,
+            "[Connect] %s => %s:%s\n",
+            $this->cli_pool[$fd]['username']
             $this->cli_pool[$fd]['client_ip'],
             $this->cli_pool[$fd]['client_port'],
-            $this->cli_pool[$fd]['username']
         );
 
         // 回复客户端可以继续
-        $serv->send($fd, "Hello [{$this->cli_pool[$fd]['username']}], Welcome!\r\n");
+        $serv->send($fd, "Hello [{$this->cli_pool[$fd]['username']}], Welcome To QsMail Server!\r\n");
     }
 
     // 断开连接

@@ -1,12 +1,12 @@
 #!/bin/bash
-# Swoole Reload Demo
-# Swoole 热更新 示例
+# QsMail POP3 Server
+# 基于Swoole的POP3邮件服务器
 # 青石 <www@qs5.org> http://www.qs5.org
 
 # php主程序文件名
 script_name='init.php'
 # pid文件 请和 php 内设置一致
-run_pid_file='/var/run/swoole_reload_demo.pid'
+run_pid_file='/var/run/qsmail_pop3_server.pid'
 # 获取当前运行目录
 init_dir="$(cd "$(dirname "$0")" && pwd )"
 # 运行日志保存文件夹
@@ -144,7 +144,11 @@ case "$1" in
     "stop")    cmd_isStop ;;
     "kill")    cmd_isKill ;;
     *)
-        echo -e "+--------------------------+\n|    Swoole Reload Demo    |\n+--------------------------+\n|    http://www.qs5.org    |\n+--------------------------+"
+        echo "+------------------------------------+"
+        echo "|     QsMail POP3 Server Manager     |"
+        echo "+------------------------------------+"
+        echo "|         http://www.qs5.org         |"
+        echo "+------------------------------------+"
         echo "Usage: $0 {start|status|restart|reload|stop|kill}"
     ;;
 esac
