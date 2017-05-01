@@ -20,10 +20,13 @@ echo "+----------------------------+\n";
     define('RUN_PID_FILE', '/var/run/qsmail_pop3_server.pid');
 
     // 定义根目录
-    define('APP_ROOT', dirname(__FILE__) . '/');
+    define('ROOT_PATH', dirname(__FILE__) . '/');
+
+    // 定义应用目录
+    define('APP_ROOT', ROOT_PATH . 'app/');
 
     // 日志文件目录
-    define('LOG_PATH', APP_ROOT . 'logs/');
+    define('LOG_PATH', ROOT_PATH . 'logs/');
 
     // 设置调试模式 先定义等下写静态
     $is_debug = true;
