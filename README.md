@@ -7,8 +7,8 @@
 文件名|文件名功能|备注说明
 ------|----------|--------
 init.php|执行入口文件|
-demoServer.class.php|核心功能类|这里的代码是不支持热更新的
-app.class.php|应用功能类|这里的代码可以支持热更新
+pop3Server.class.php|POP3 Server 基类|核心基础功能
+app.class.php|应用功能类|功能性类
 run.sh|进程管理脚本|
 
 # run.sh 参数说明
