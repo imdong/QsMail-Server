@@ -50,6 +50,12 @@ class POP3_Server
             'package_eof'              => "\r\n",   // 设置EOF
         ));
 
+        // 设置自动加载类
+        spl_autoload_register(function($class_name)
+        {
+            include APP_ROOT . $class_name . '.class.php';
+        });
+
         // 注册回调事件
         $this->serv->on('Start', array($this, 'onStart'));      // 服务器被启动
         $this->serv->on('WorkerStart', array($this, 'onWorkerStart'));      // 工作进程被启动
@@ -85,7 +91,7 @@ class POP3_Server
         $timeStr = date('Y/m/d H:i:s');
 
         // 引入应用类文件
-        include APP_ROOT . 'app.class.php';
+        // include APP_ROOT . 'App.class.php';
 
         // 输出调试信息
         printf(
