@@ -53,7 +53,19 @@ class POP3_Server
         // 设置自动加载类
         spl_autoload_register(function($class_name)
         {
-            include APP_ROOT . $class_name . '.class.php';
+            // 定义可以加载的文件列表
+            $file_list = array(
+                APP_ROOT . $class_name . '.class.php',
+                APP_ROOT . $class_name . '.php',
+            );
+            // 挨个测试是否可以加载
+            foreach ($file_list as $file_name) {
+                if(file_exists($file_name)){
+                    include $file_name;
+                    return true;
+                }
+            }
+            return false;
         });
 
         // 注册回调事件
@@ -90,8 +102,8 @@ class POP3_Server
         // 获取启动时间
         $timeStr = date('Y/m/d H:i:s');
 
-        // 引入应用类文件
-        // include APP_ROOT . 'App.class.php';
+        // 引入配置文件
+        require ROOT_PATH . 'config.php';
 
         // 输出调试信息
         printf(

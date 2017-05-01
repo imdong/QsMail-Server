@@ -16,7 +16,7 @@ class App extends POP3_Server
      * 程序应用版本号
      * @var string
      */
-    static private $ver = '0.1.1718.1b';
+    static private $ver = '0.1.1718.1a';
 
     /**
      * 获取版本号
