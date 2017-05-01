@@ -10,7 +10,7 @@
 /**
  * POP3服务基类
  */
-class Pop3Server
+class POP3_Server
 {
 
     /**

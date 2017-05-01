@@ -70,10 +70,10 @@ echo "+----------------------------+\n";
 //**** 启动进程 ****//
 
     // 引入进程文件
-    require 'Pop3_Server.class.php';
+    require 'POP3_Server.class.php';
 
     // 启动服务器
-    $server = new Pop3_Server($isRun, $log_file);
+    $server = new POP3_Server($isRun, $log_file);
 
 //**** 结束前处理 ****//
 
