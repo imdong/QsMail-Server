@@ -494,6 +494,4 @@ class Mail_Server
         // 发送消息到客户端
         return $this->serv->send($fd, $msg);
     }
-
-
 }

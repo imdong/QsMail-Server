@@ -1,14 +1,14 @@
 <?php
 /**
- * QsMail Mail Server
- * 基于Swoole的POP3邮件服务器
+ * QsMail Server
+ * 基于Swoole的邮件服务器
  *
  * @author      青石 <www@qs5.org>
- * @copyright   QsMail POP3 Server
+ * @copyright   QsMail Server
  */
 
 /**
- * POP3 服务端 功能模块
+ * POP3协议支持类
  */
 class Pop3_Server
 {
@@ -31,7 +31,7 @@ class Pop3_Server
     function __construct(Mail_App $App)
     {
         // 输出调试记录
-        IS_DEBUG && printf("[Pop3_Server] Create Success\n");
+        // IS_DEBUG && printf("[Pop3_Server] Create Success\n");
 
         // 保存App对象
         $this->App = $App;

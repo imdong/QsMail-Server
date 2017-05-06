@@ -1,14 +1,14 @@
 <?php
 /**
- * QsMail Mail Server
- * 基于Swoole的POP3邮件服务器
+ * QsMail Server
+ * 基于Swoole的邮件服务器
  *
  * @author      青石 <www@qs5.org>
- * @copyright   QsMail POP3 Server
+ * @copyright   QsMail Server
  */
 
 /**
- * SMTP 服务端 功能模块
+ * SMTP协议支持类
  */
 class Smtp_Server
 {

@@ -1,10 +1,10 @@
 <?php
 /**
- * QsMail POP3 Server
- * 基于Swoole的POP3邮件服务器
+ * QsMail Server
+ * 基于Swoole的邮件服务器
  *
  * @author      青石 <www@qs5.org>
- * @copyright   QsMail POP3 Server
+ * @copyright   QsMail Server
  */
 
 /**

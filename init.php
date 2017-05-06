@@ -1,23 +1,23 @@
 <?php
 /**
- * QsMail POP3 Server
- * 基于Swoole的POP3邮件服务器
+ * QsMail Server
+ * 基于Swoole的邮件服务器
  *
  * @author      青石 <www@qs5.org>
- * @copyright   QsMail POP3 Server
+ * @copyright   QsMail Server
  */
 
 //**** 输出版本相关信息 ****//
-echo "+----------------------------+\n";
-echo "|     QsMail POP3 Server     |\n";
-echo "+----------------------------+\n";
-echo "|     http://www.qs5.org     |\n";
-echo "+----------------------------+\n";
+echo "+-----------------------+\n";
+echo "|     QsMail Server     |\n";
+echo "+-----------------------+\n";
+echo "|   http://www.qs5.org  |\n";
+echo "+-----------------------+\n";
 
 //**** 启动时配置 ****//
 
     // pid保存文件名
-    define('RUN_PID_FILE', '/var/run/qsmail_pop3_server.pid');
+    define('RUN_PID_FILE', '/var/run/qsmail_server.pid');
 
     // 定义根目录
     define('ROOT_PATH', dirname(__FILE__) . '/');
