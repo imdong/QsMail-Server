@@ -31,6 +31,13 @@ class Mail_App
     private $db;
 
     /**
+     * 数据库操作锁
+     * @var [type]
+     */
+    private $db_look;
+
+
+    /**
      * 程序应用版本号
      * @var string
      */
@@ -49,6 +56,10 @@ class Mail_App
 
         // 连接到数据库
         $this->db_connect();
+
+        // 创建数据库操作锁
+        $this->db_look = new swoole_lock(SWOOLE_SPINLOCK);
+
     }
 
     /**
@@ -83,27 +94,80 @@ class Mail_App
             // 退出线程
             $this->serv->shutdown();
         }
+
+        return true;
     }
 
     /**
-     * 执行一次sql查询
+     *
      * @param  string $sql 查询语句
      * @return [type]      [description]
      */
-    public function db_query($sql)
+    /**
+     * 执行一次sql查询
+     * @param  string $sql  查询语句
+     * @param  string $type 查询类型 如果设置就尝试处理结果
+     * @return [type]       [description]
+     */
+    public function db_query($sql, $type = false)
     {
+        // 操作加锁
+        $this->db_look->lock();
+
+        // 创建事务
+
         // 执行sql查询
-        $ret = $this->db->query($sql);
+        $result = $this->db->query($sql);
 
         // 如果出错是因为超时
-        if(!$ret && in_array($this->db->errno, array(2006, 2013))){
+        if(!$result && in_array($this->db->errno, array(2006, 2013))){
             // 连接到数据库
             $this->mysqlConnect();
             // 插入到数据库
-            $ret = $this->db->query($sql);
+            $result = $this->db->query($sql);
         }
 
-        return $ret;
+        // 查询失败或没设置类型就直接返回
+        if(!$result || !$type) {
+            // 取消锁
+            $this->db_look->unlock();
+
+            // 取消事务
+
+            // 返回结果
+            return $result;
+        }
+
+        // 判断查询类型
+        switch (strtoupper($type)) {
+            case 'EXPLAIN': // 不知道
+            case 'DESCRIBE':// 不知道
+            case 'SHOW':    // 显示所有表信息
+            case 'SELECT':  // 从数据库表中获取数据
+                $ret_data = $result->fetch_all( MYSQLI_ASSOC);
+                break;
+            // INSERT INTO - 向数据库表中插入数据
+            case 'INSERT':
+                $ret_data = $this->db->insert_id;
+                break;
+            // UPDATE - 更新数据库表中的数据
+            case 'UPDATE':
+            // DELETE - 从数据库表中删除数据
+            case 'DELETE':
+                $ret_data = $this->db->affected_rows;
+                break;
+            default:
+                $ret_data = $result;
+                break;
+        }
+
+        // 取消锁
+        $this->db_look->unlock();
+
+        // 取消事务
+
+        // 返回数据
+        return $ret_data;
     }
 
     /**
@@ -191,5 +255,33 @@ class Mail_App
 
         return $mail_info['body'];
     }
+
+    /**
+     * 删除邮件
+     * @param  array $dele_list 需要删除的邮件ID列表
+     * @return integer          成功删除的邮件数量
+     */
+    public function delete($dele_list)
+    {
+        // 生成查询Sql
+        $sql = sprintf(
+            'DELETE FROM `mail_list` WHERE `mail_id` IN (\'%s\')',
+            implode('\', \'', $dele_list)
+        );
+
+
+
+        // 执行一次sql查询
+        $ret_data = false;
+        if($this->db->query($sql)){
+            $ret_data = $this->db->affected_rows;
+        }
+
+        // 取消锁
+        $this->db_look->unlock();
+
+        return $ret_data;
+    }
+
 
 }

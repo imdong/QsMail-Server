@@ -189,11 +189,16 @@ class Pop3_Server
         // 如果为操作状态则执行删除
         if( 'TRANSACTION' == $user_data['status'] ){
             // 删除的邮件列表
+            $dele_list = array();
+            foreach ($user_data['dele_list'] as $mail_info) {
+                $dele_list[] = $mail_info['mail_id'];
+            }
+            // 走删除方法
+            $del_ret = $this->App->delete($dele_list);
         }
 
         return array('status' => true, 'msg' => 'Bye!', 'close' => true);
     }
-
 
     /**
      * 处理 用户账号
