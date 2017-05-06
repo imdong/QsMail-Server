@@ -179,7 +179,7 @@ class Mail_App
     public function login($user, $pass)
     {
         // 校验输入
-        $username = trim($user);
+        $username = explode('@', trim($user))['0'];
         $password = md5($pass);
 
         // 生成查询Sql
