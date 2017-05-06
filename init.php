@@ -48,7 +48,14 @@ echo "+----------------------------+\n";
     // 保存当前进程pid 感觉用不到
     $run_pid = posix_getpid();
     file_put_contents(RUN_PID_FILE, $run_pid) || die("save pid File Error.\n");
-    printf("Run Pid: %s\n", $run_pid);
+
+    // 获取启动时间
+    $run_timeStr = date('Y/m/d H:i:s');
+    printf(
+        "[RunInit] %s\n\tRun Pid: %s\n",
+        $run_timeStr,
+        $run_pid
+    );
 
 //**** 运行前初始化 ****//
 
@@ -59,7 +66,7 @@ echo "+----------------------------+\n";
     if(empty($argv['2'])){
         // 判断日志文件夹是否存在
         file_exists(LOG_PATH) || mkdir(LOG_PATH);
-        $log_file = sprintf(LOG_PATH . '/%s_%s.log', date('Ymd'), $run_pid);
+        $log_file = sprintf(LOG_PATH . '%s_%s.log', date('Ymd'), $run_pid);
     } else{
         $log_file = $argv['2'];
     }
@@ -70,10 +77,45 @@ echo "+----------------------------+\n";
 //**** 启动进程 ****//
 
     // 引入进程文件
-    require APP_ROOT . 'POP3_Server.class.php';
+    require APP_ROOT . 'Mail_Server.class.php';
 
     // 启动服务器
-    $server = new POP3_Server($isRun, $log_file);
+    $mail = new Mail_Server($isRun, $log_file);
+
+    // 设置监听协议
+    $mail->set('class_list',
+        array(
+            '26' => array(
+                'host' => '0.0.0.0',
+                'type' => SWOOLE_SOCK_TCP,
+                'class' => 'Smtp'
+            ),
+            '110' => array(
+                'host' => '0.0.0.0',
+                'type' => SWOOLE_SOCK_TCP,
+                'class' => 'Pop3'
+            )
+        )
+    );
+
+    // 其他设置
+    $mail->set(
+        array(
+            'worker_num' => 2,  // worker进程数
+        )
+    );
+
+    // 启动服务器 并检测错误
+    if(!$mail->start()){
+        if($errorInfo = $mail->getError()){
+            printf(
+                "[RunError] (%s): %s\n",
+                $errorInfo['no'],
+                $errorInfo['msg']
+            );
+            return;
+        }
+    }
 
 //**** 结束前处理 ****//
 
