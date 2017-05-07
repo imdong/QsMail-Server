@@ -125,16 +125,13 @@ class Smtp_Server
     public function onReceive(Mail_Server $mail, $fd, $datas, &$user_data)
     {
         // 始终假设存在粘包问题 拆开每一行单独处理
-        $dataArr = explode("\r\n", $datas);
+        $dataArr = explode("\r\n", rtrim($datas));
 
         // 设置返回消息
         $ret_msg_arr = array();
 
         // 对每一行依次处理
         foreach ($dataArr as $data) {
-
-            // 空行跳过 \r\n 分割后末尾会有空行
-            if($data == '') continue;
 
             // 判断是否在接收多行数据
             if($user_data['multi_mode']){
@@ -161,8 +158,8 @@ class Smtp_Server
                     $ret_msg_arr[] = $ret_data;
                 }
             } else {
-                // 清除末尾的换行
-                $data = rtrim($data, "\r\n");
+                // 空行跳过 \r\n 分割后末尾会有空行
+                if($data == '') continue;
 
                 // 解析消息格式
                 $command = $this->exp_command($data);
@@ -356,24 +353,24 @@ class Smtp_Server
                 'msg'    => 'End data with <CR><LF>.<CR><LF>'
             );
         } else {
-            echo "[MailBody] {$msg}";
+            echo "[MailBody] {$data}\n";
             $saveRet = true;
 
             // 走保存邮件流程
             $saveRet = $this->app->mailSave(
-                $this->cli_pool[$fd]['mail_from'],
-                $this->cli_pool[$fd]['mail_rect'],
-                $msg,
-                $this->cli_pool[$fd]['client_ip'],
-                $this->cli_pool[$fd]['client_from']
+                $user_data['mail_from'],
+                $user_data['mail_rect'],
+                $data,
+                $user_data['client_ip'],
+                $user_data['client_from']
             );
 
             // 输出保存结果
-            // if($saveRet){
-            //     echo "[mailSave:{$fd}] Ok!\n";
-            // } else {
-            //     echo "[mailSave:{$fd}] Error!\n";
-            // }
+            if($saveRet){
+                echo "[mailSave:{$fd}] Ok!\n";
+            } else {
+                echo "[mailSave:{$fd}] Error!\n";
+            }
 
             // 返回处理结果
             $ret_info = array(
