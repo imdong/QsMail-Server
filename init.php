@@ -85,7 +85,7 @@ echo "+-----------------------+\n";
     // 设置监听协议
     $mail->set('class_list',
         array(
-            '26' => array(
+            '25' => array(
                 'host' => '0.0.0.0',
                 'type' => SWOOLE_SOCK_TCP,
                 'class' => 'Smtp'
