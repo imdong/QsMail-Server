@@ -54,11 +54,32 @@ class Mail_App
         // 引入配置文件
         $this->config = require ROOT_PATH . 'config.php';
 
+        // 重新设置自动加载类
+        spl_autoload_register(function($class_name)
+        {
+            // 定义可以加载的文件列表
+            $file_list = array(
+                APP_ROOT . "class/{$class_name}.class.php",
+                APP_ROOT . "lib/{$class_name}.class.php",
+                APP_ROOT . "class/{$class_name}.php",
+                APP_ROOT . "lib/{$class_name}.php",
+            );
+            // 挨个测试是否可以加载
+            foreach ($file_list as $file_name) {
+                if(file_exists($file_name)){
+                    include $file_name;
+                    return true;
+                }
+            }
+            return false;
+        });
+
         // 连接到数据库
         $this->db_connect();
 
         // 创建数据库操作锁
         $this->db_look = new swoole_lock(SWOOLE_SPINLOCK);
+
 
     }
 
@@ -269,19 +290,80 @@ class Mail_App
             implode('\', \'', $dele_list)
         );
 
-
-
         // 执行一次sql查询
         $ret_data = false;
         if($this->db->query($sql)){
             $ret_data = $this->db->affected_rows;
         }
 
-        // 取消锁
-        $this->db_look->unlock();
-
         return $ret_data;
     }
 
+    /**
+     * 保存邮件信息
+     * @param  string $mail_from   发件人
+     * @param  array  $mail_rect   收件人列表
+     * @param  string $mail_data   邮件正文
+     * @param  string $client_ip   发信服务器IP
+     * @param  string $client_from 发信服务器标记
+     * @return [type]              [description]
+     */
+    public function mailSave($mail_from, $mail_rect, $mail_data, $client_ip, $client_from)
+    {
+        // 获取当前时间戳
+        $timeStr = date('Ymd');
+
+        // 邮件内容编码
+        $mail_data   = $this->link->real_escape_string($mail_data);
+        $client_from = $this->link->real_escape_string($client_from);
+
+        // SQL语句
+        $sql = "INSERT INTO `mail_list` (`mail_id`, `from`, `from_ip`,`client_from`, `rect`, `body`) VALUES \n";
+
+        // 循环每个收件人
+        $sql_value = array();
+        foreach ($mail_rect as $rect) {
+            // 邮件hash
+            $mail_hash = substr(md5("{$mail_from}_{$rect}"), 6, 16);
+            // 随机唯一ID
+            $randid = substr(md5(uniqid(mt_rand(), true)), 10, 16);
+            // 邮件ID
+            $mail_id = "d{$timeStr}_{$mail_hash}_{$randid}";
+
+            // 转义邮件信息
+            $mail_from = $this->link->real_escape_string($mail_from);
+            $rect      = $this->link->real_escape_string($rect);
+
+            // 值数组
+            $sql_value[] = "('{$mail_id}', '{$mail_from}', '{$client_ip}','{$client_from}', '{$rect}', '{$mail_data}')";
+        }
+
+        // 挂钩事件处理回调
+        if(preg_grep('#@reddit\.com#', $mail_from)){
+            file_get_contents('http://www.qs5.org/tools/AutoPxls/redditMail.php?mail_id=' . $mail_id);
+        } else if(preg_grep('#@mailgun\.discordapp\.com#', $mail_from)){
+            file_get_contents('http://www.qs5.org/tools/AutoPxls/discordMail.php?mail_id=' . $mail_id);
+        }
+
+        // 拼接数组
+        $sql_valueStr = implode(",\n", $sql_value);
+
+        // 拼接 sql语句
+        $sql.= $sql_valueStr . ';';
+
+        // 插入到数据库
+        $ret = $this->link->query($sql);
+
+        // 如果出错是因为超时
+        if(!$ret && $this->link->errno == 2006){
+            // 连接到数据库
+            $this->mysqlConnect();
+            // 插入到数据库
+            $ret = $this->link->query($sql);
+        }
+
+        // 返回状态
+        return $ret;
+    }
 
 }
