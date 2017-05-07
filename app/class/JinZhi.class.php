@@ -3,7 +3,7 @@
  * 禁止转换
  */
 class JinZhi {
-    const KeyCode = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$';
+    const KeyCode = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
 
     /**
      * 将64进制的数字字符串转为10进制的数字字符串
@@ -75,7 +75,7 @@ class JinZhi {
      * @return string
      * @author 野马
      */
-    protected function hex16to64($m, $len = 0) {
+    public function hex16to64($m, $len = 0) {
         $KeyCode = self::KeyCode;
         $hex2 = array();
         for($i = 0, $j = strlen($m); $i < $j; ++$i) {
