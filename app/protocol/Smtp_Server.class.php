@@ -359,14 +359,14 @@ class Smtp_Server
             echo "[MailBody] {$msg}";
             $saveRet = true;
 
-            // // 走保存邮件流程
-            // $saveRet = $this->mailSave(
-            //     $this->cli_pool[$fd]['mail_from'],
-            //     $this->cli_pool[$fd]['mail_rect'],
-            //     $msg,
-            //     $this->cli_pool[$fd]['client_ip'],
-            //     $this->cli_pool[$fd]['client_from']
-            // );
+            // 走保存邮件流程
+            $saveRet = $this->app->mailSave(
+                $this->cli_pool[$fd]['mail_from'],
+                $this->cli_pool[$fd]['mail_rect'],
+                $msg,
+                $this->cli_pool[$fd]['client_ip'],
+                $this->cli_pool[$fd]['client_from']
+            );
 
             // 输出保存结果
             // if($saveRet){
