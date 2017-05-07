@@ -640,11 +640,11 @@ class Pop3_Server
 
                 // 获取邮件前几行 从头信息后面找
                 $posi = stripos($mail_body, "\r\n\r\n") + 4;
-echo "A: {$posi}\n";
+
                 // 取出前几行
                 for ($i=0; $i < $num; $i++) {
                     $posi = stripos($mail_body, "\r\n", $posi);
-printf("B(%s): %s\n", $i, $posi === false ? 'false' : $posi);
+
                     // 如果没找到 说明到结尾了
                     if($posi === false) break;
 
@@ -652,7 +652,7 @@ printf("B(%s): %s\n", $i, $posi === false ? 'false' : $posi);
 
                 // 截取字符串
                 $posi && $mail_body = substr($mail_body, 0, $posi);
-echo "C: {$posi}\n";
+
                 // 拼接返回消息
                 $ret_data = array(
                     'status' => true,
@@ -662,7 +662,6 @@ echo "C: {$posi}\n";
                         $mail_body
                     )
                 );
-echo "D: {$ret_data['msg']}\n";
             } else {
                 // 邮件不存在
                 $ret_data = array(
