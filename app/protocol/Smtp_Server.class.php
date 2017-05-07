@@ -324,7 +324,7 @@ class Smtp_Server
             if(!$mail_user['status']){
                 $ret_info = array(
                     'status' => 550,
-                    'msg'    => $mail_user['msg'] // 'No such user here'
+                    'msg'    => $mail_user['msg']
                 );
             } else {
                 // 保存收件人信息
@@ -406,21 +406,4 @@ class Smtp_Server
             'msg'    => 'Bye'
         );
     }
-
-    /**
-     * 测试消息
-     * @param  [type] $msg        [description]
-     * @param  [type] &$user_data [description]
-     * @return [type]             [description]
-     */
-    public function cmd_test($msg, &$user_data)
-    {
-        $ret_data =
-
-
-        var_dump($ret_data);
-    }
-
-
-
 }

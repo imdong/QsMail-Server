@@ -238,7 +238,7 @@ class Mail_App
         // 解析邮件地址
         $regEx = '#^(?<user_b>[a-z0-9]{6,})?(?:[^@]+)?@(?<domain>(?:(?<user_a>[a-z0-9]{6,})\.)?(?<domain_main>[a-z0-9\.\-]+\.[a-z]+))$#';
         if(!preg_match($regEx, $email, $email_info)){
-            $ret_data['msg'] = 'Email Addr Error';
+            $ret_data['msg'] = 'Email addr error';
             return $ret_data;
         }
 
@@ -264,7 +264,7 @@ class Mail_App
             if(isset($list['0'])){
                 $mail_user = $list['0']['username'];
             } else {
-                $ret_data['msg'] = 'Diy Domain Not User';
+                $ret_data['msg'] = 'No such domain here';
                 return $ret_data;
             }
         }
@@ -282,7 +282,7 @@ class Mail_App
         if(isset($list['0'])){
             $mail_user = $list['0']['username'];
         } else {
-            $ret_data['msg'] = 'Not User';
+            $ret_data['msg'] = 'No such user here';
             return $ret_data;
         }
 
