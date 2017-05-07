@@ -367,7 +367,7 @@ class Mail_App
 
         // 插入到数据库
         $ret = $this->db_query($sql, 'UPDATE');
-var_dump($ret);
+
         // 返回状态
         return $ret;
     }
