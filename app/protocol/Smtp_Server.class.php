@@ -377,9 +377,9 @@ class Smtp_Server
 
             // 输出保存结果
             if($saveRet){
-                echo "[mailSave:{$fd}] Ok!\n";
+                echo "[mailSave:{$user_data['username']}] Ok!\n";
             } else {
-                echo "[mailSave:{$fd}] Error!\n";
+                echo "[mailSave:{$user_data['username']}] Error!\n";
             }
 
             // 返回处理结果
