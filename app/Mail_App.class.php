@@ -36,6 +36,11 @@ class Mail_App
      */
     private $db_look;
 
+    /**
+     * 禁止转换类
+     * @var JinZhi
+     */
+    private $jinzhi;
 
     /**
      * 程序应用版本号
@@ -80,7 +85,8 @@ class Mail_App
         // 创建数据库操作锁
         $this->db_look = new swoole_lock(SWOOLE_SPINLOCK);
 
-
+        // 创建进制转换
+        $this->jinzhi = new JinZhi();
     }
 
     /**
@@ -165,16 +171,16 @@ class Mail_App
             case 'DESCRIBE':// 不知道
             case 'SHOW':    // 显示所有表信息
             case 'SELECT':  // 从数据库表中获取数据
-                $ret_data = $result->fetch_all( MYSQLI_ASSOC);
+                // 获取所有数据
+                $ret_data = $result->fetch_all(MYSQLI_ASSOC);
                 break;
-            // INSERT INTO - 向数据库表中插入数据
-            case 'INSERT':
+            case 'INSERT':  // 向数据库表中插入数据
+                // 返回插入ID
                 $ret_data = $this->db->insert_id;
                 break;
-            // UPDATE - 更新数据库表中的数据
-            case 'UPDATE':
-            // DELETE - 从数据库表中删除数据
-            case 'DELETE':
+            case 'UPDATE':  // 更新数据库表中的数据
+            case 'DELETE':  // 从数据库表中删除数据
+                // 返回操作影响行数
                 $ret_data = $this->db->affected_rows;
                 break;
             default:
@@ -230,10 +236,7 @@ class Mail_App
         );
 
         // 执行查询
-        $sql_ret = $this->db_query($sql);
-
-        // 取出数据
-        $list = $sql_ret->fetch_all(MYSQLI_ASSOC);
+        $list = $this->db_query($sql, 'SELECT');
 
         // 重新组合数据
         $mail_list = array();
@@ -310,40 +313,51 @@ class Mail_App
      */
     public function mailSave($mail_from, $mail_rect, $mail_data, $client_ip, $client_from)
     {
-        // 获取当前时间戳
-        $timeStr = date('Ymd');
+        // 字符串收件人转换为数组
+        if(is_string($mail_rect)) $mail_rect = array($mail_rect);
 
         // 邮件内容编码
-        $mail_data   = $this->link->real_escape_string($mail_data);
-        $client_from = $this->link->real_escape_string($client_from);
+        $mail_data   = $this->db->real_escape_string($mail_data);
+        $client_from = $this->db->real_escape_string($client_from);
 
         // SQL语句
-        $sql = "INSERT INTO `mail_list` (`mail_id`, `from`, `from_ip`,`client_from`, `rect`, `body`) VALUES \n";
+        $sql = "INSERT INTO `mail_list` (`mail_id`, `mail_from`, `from_ip`, `from_mark`, `receive_mail`, `body`, `size`, `owner`) VALUES \n";
 
         // 循环每个收件人
         $sql_value = array();
         foreach ($mail_rect as $rect) {
-            // 邮件hash
-            $mail_hash = substr(md5("{$mail_from}_{$rect}"), 6, 16);
-            // 随机唯一ID
-            $randid = substr(md5(uniqid(mt_rand(), true)), 10, 16);
             // 邮件ID
-            $mail_id = "d{$timeStr}_{$mail_hash}_{$randid}";
+            $mail_id = sprintf(
+                'D%sF%sM%sZ',
+                $this->jinzhi->hex10to64(time()),
+                $this->jinzhi->hex16to64(substr(md5("{$mail_from}_{$rect}"), 6, 16)),
+                $this->jinzhi->hex16to64(substr(md5("{$mail_data}_" . uniqid(mt_rand(), true)), 6, 16))
+            );
 
             // 转义邮件信息
-            $mail_from = $this->link->real_escape_string($mail_from);
-            $rect      = $this->link->real_escape_string($rect);
+            $mail_from = $this->db->real_escape_string($mail_from);
+            $rect      = $this->db->real_escape_string($rect);
 
             // 值数组
-            $sql_value[] = "('{$mail_id}', '{$mail_from}', '{$client_ip}','{$client_from}', '{$rect}', '{$mail_data}')";
+            $sql_value[] = sprintf(
+                "('%s', '%s', '%s','%s', '%s', '%s', '%s', '%s')",
+                $mail_id,
+                $mail_from,
+                $client_ip,
+                $client_from,
+                $rect,
+                $mail_data,
+                strlen($mail_data),
+                'imdong'
+            );
         }
 
-        // 挂钩事件处理回调
-        if(preg_grep('#@reddit\.com#', $mail_from)){
-            file_get_contents('http://www.qs5.org/tools/AutoPxls/redditMail.php?mail_id=' . $mail_id);
-        } else if(preg_grep('#@mailgun\.discordapp\.com#', $mail_from)){
-            file_get_contents('http://www.qs5.org/tools/AutoPxls/discordMail.php?mail_id=' . $mail_id);
-        }
+        // // 挂钩事件处理回调
+        // if(preg_grep('#@reddit\.com#', $mail_from)){
+        //     file_get_contents('http://www.qs5.org/tools/AutoPxls/redditMail.php?mail_id=' . $mail_id);
+        // } else if(preg_grep('#@mailgun\.discordapp\.com#', $mail_from)){
+        //     file_get_contents('http://www.qs5.org/tools/AutoPxls/discordMail.php?mail_id=' . $mail_id);
+        // }
 
         // 拼接数组
         $sql_valueStr = implode(",\n", $sql_value);
@@ -352,16 +366,8 @@ class Mail_App
         $sql.= $sql_valueStr . ';';
 
         // 插入到数据库
-        $ret = $this->link->query($sql);
-
-        // 如果出错是因为超时
-        if(!$ret && $this->link->errno == 2006){
-            // 连接到数据库
-            $this->mysqlConnect();
-            // 插入到数据库
-            $ret = $this->link->query($sql);
-        }
-
+        $ret = $this->db_query($sql, 'UPDATE');
+var_dump($ret);
         // 返回状态
         return $ret;
     }
