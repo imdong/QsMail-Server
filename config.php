@@ -20,4 +20,7 @@ return array(
         'db'       => 'qsmail',
         'charset'  => 'utf8'
     ),
+
+    //**** 自有域名后缀 ****//
+    'MY_DOMAIN' => explode('|', 'm.qs5.org|'),
 );
