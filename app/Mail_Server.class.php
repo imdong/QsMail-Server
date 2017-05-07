@@ -404,9 +404,7 @@ class Mail_Server
         $ret_msg = $this->$class_name->onConnect($this, $fd, $user_data);
 
         // 输出调试记录
-        IS_DEBUG && printf('(%s) %s> %s', $user_data['class_type'], $fd, $ret_msg);
-
-
+        IS_DEBUG && printf('(%s) %s: S > %s', $user_data['class_type'], $user_data['username'], $ret_msg);
 
         // 保存用户信息
         $this->userData($fd, $user_data);
@@ -453,7 +451,7 @@ class Mail_Server
         $user_data = $this->userData($fd);
 
         // 输出调试记录
-        IS_DEBUG && printf('(%s) %s< %s', $user_data['class_type'], $fd, $data);
+        IS_DEBUG && printf('(%s) %s: C < %s', $user_data['class_type'], $user_data['username'], $data);
 
         // 转发给类处理
         $ret_msg = $this->$user_data['class_type']->onReceive($this, $fd, $data, $user_data);
@@ -471,7 +469,7 @@ class Mail_Server
         // 有返回消息就发送给客户端
         if($ret_msg){
             // 输出调试记录
-            IS_DEBUG && printf('(%s) %s> %s', $user_data['class_type'], $fd, $ret_msg);
+            IS_DEBUG && printf('(%s) %s: S > %s', $user_data['class_type'], $user_data['username'], $ret_msg);
             $this->sendMsg($fd, $ret_msg);
         }
 
