@@ -133,7 +133,7 @@ class Smtp_Server
         // 对每一行依次处理
         foreach ($dataArr as $data) {
 
-            // 空行跳过 忘记为啥要跳过了
+            // 空行跳过 \r\n 分割后末尾会有空行
             if($data == '') continue;
 
             // 判断是否在接收多行数据
@@ -142,15 +142,19 @@ class Smtp_Server
                 // 先把收到的消息保存的缓冲区
                 $user_data['buffer'].= $data . "\r\n";
 
-                // 一直等待接收完毕
-                if(preg_match("#\r\n\.\r\n$#", $user_data['buffer'])){
+                // 判断是否收到结束标记
+                if(substr($user_data['buffer'], -5) == "\r\n.\r\n"){
+
                     // 返回单行模式
                     $user_data['multi_mode'] = false;
+
+                    // 删除末尾的结束符号
+                    $user_data['buffer'] = substr($user_data['buffer'], 0, strlen($user_data['buffer']) - 5);
 
                     // 重新调用这个方法
                     $ret_data = $this->$user_data['method_name']('', $user_data, $user_data['buffer']);
 
-                    // 获取数据并清空缓存区
+                    // 清空缓存区
                     $user_data['buffer'] = '';
 
                     // 保存返回结果
@@ -335,7 +339,7 @@ class Smtp_Server
      * @param  [type] &$user_data [description]
      * @return [type]             [description]
      */
-    private function cmd_data($msg, &$user_data, $data = '')
+    private function cmd_data($msg, &$user_data, $data = null)
     {
         // 没传递 数据则进入 获取状态
         if(empty($data)){
@@ -343,8 +347,10 @@ class Smtp_Server
             // 设置接受多行数据
             $user_data['multi_mode'] = true;
 
-            // 设置或清空缓冲区
+            // 清空缓冲区
             $user_data['buffer'] = '';
+
+            // 设置返回信息
             $ret_info = array(
                 'status' => 354,
                 'msg'    => 'End data with <CR><LF>.<CR><LF>'
