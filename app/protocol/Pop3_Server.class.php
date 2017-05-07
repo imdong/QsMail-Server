@@ -639,11 +639,11 @@ class Pop3_Server
                 $mail_body = $this->App->get_mail_body($user_data['mail_list'][$mid]['mail_id']);
 
                 // 获取邮件前几行 从头信息后面找
-                $posi = stripos($mail_body, "\r\n\r\n") + 4;
+                $posi = stripos($mail_body, "\r\n\r\n") + 2;
 
                 // 取出前几行
                 for ($i=0; $i < $num; $i++) {
-                    $posi = stripos($mail_body, "\r\n", $posi);
+                    $posi = stripos($mail_body, "\r\n", $posi + 2);
 
                     // 如果没找到 说明到结尾了
                     if($posi === false) break;
