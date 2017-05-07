@@ -92,7 +92,8 @@ class Mail_Server
         {
             // 定义可以加载的文件列表
             $file_list = array(
-                APP_ROOT . $class_name . '.class.php',
+                APP_ROOT . "Protocol/{$class_name}.class.php",
+                APP_ROOT . "{$class_name}.class.php",
                 APP_ROOT . $class_name . '.php',
             );
             // 挨个测试是否可以加载
