@@ -223,6 +223,76 @@ class Mail_App
     }
 
     /**
+     * 解析邮件所有者
+     * @param  [type] $email [description]
+     * @return [type]        [description]
+     */
+    public function exp_username($email)
+    {
+        // 预设返回信息
+        $ret_data = array(
+            'status' => false,
+            'msg'    => 'error'
+        );
+
+        // 解析邮件地址
+        $regEx = '#^(?<user_b>[a-z0-9]{6,})?(?:[^@]+)?@(?<domain>(?:(?<user_a>[a-z0-9]{6,})\.)?(?<domain_main>[a-z0-9\.\-]+\.[a-z]+))$#';
+        if(!preg_match($regEx, $email, $email_info)){
+            $ret_data['msg'] = 'Email Addr Error';
+            return $ret_data;
+        }
+
+        // 判断主域名是否为自有
+        if(in_array($email_info['domain_main'], $this->config['MY_DOMAIN']) ||
+            in_array($email_info['domain'], $this->config['MY_DOMAIN']) )
+        {
+            // 设置用户名
+            $mail_user = empty($email_info['user_a']) ? $email_info['user_b'] : $email_info['user_a'];
+        }
+        // 非自有则查数据域名归属
+        else {
+            // 查询是否有绑定这个域名
+            $sql = sprintf(
+                'SELECT `username` FROM `user_domain` WHERE `domain` = \'%s\';',
+                $email_info['domain']
+            );
+
+            // 执行查询
+            $list = $this->db_query($sql, 'SELECT');
+
+            // 判断是否有结果
+            if(isset($list['0'])){
+                $mail_user = $list['0']['username'];
+            } else {
+                $ret_data['msg'] = 'Diy Domain Not User';
+                return $ret_data;
+            }
+        }
+
+        // 判断用户是否存在
+        $sql = sprintf(
+            'SELECT `username` FROM `user_list` WHERE `username` = \'%s\';',
+            $mail_user
+        );
+
+        // 执行查询
+        $list = $this->db_query($sql, 'SELECT');
+
+        // 判断是否有结果
+        if(isset($list['0'])){
+            $mail_user = $list['0']['username'];
+        } else {
+            $ret_data['msg'] = 'Not User';
+            return $ret_data;
+        }
+
+        return array(
+            'status'   => true,
+            'username' => $mail_user
+        );
+    }
+
+    /**
      * 获取邮件列表
      * @param  [type] $username [description]
      * @return [type]           [description]
@@ -326,6 +396,15 @@ class Mail_App
         // 循环每个收件人
         $sql_value = array();
         foreach ($mail_rect as $rect) {
+
+            // 根据邮件地址解析所有者
+            $mail_user = $this->exp_username($rect);
+
+            // 解析是否成功
+            if(!$mail_user['status']){
+                continue;
+            }
+
             // 邮件ID
             $mail_id = sprintf(
                 'D%sF%sM%sZ',
@@ -348,7 +427,7 @@ class Mail_App
                 $rect,
                 $mail_data,
                 strlen($mail_data),
-                'imdong'
+                $mail_user['username']
             );
         }
 

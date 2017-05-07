@@ -318,15 +318,25 @@ class Smtp_Server
         } else {
             // 获取收件人地址成功
             echo "[Rect To] {$mailAddr['mail']}\n";
-            // 保存收件人信息
-            $user_data['mail_rect'][] = trim($mailAddr['mail']);
-            // 回复客户端
-            $ret_info = array(
-                'status' => 250,
-                'msg'    => 'Ok'
-            );
-        }
 
+            // 检查收件人归属
+            $mail_user = $this->app->exp_username($mailAddr['mail']);
+            if(!$mail_user['status']){
+                $ret_info = array(
+                    'status' => 550,
+                    'msg'    => $mail_user['msg'] // 'No such user here'
+                );
+            } else {
+                // 保存收件人信息
+                $user_data['mail_rect'][] = trim($mailAddr['mail']);
+
+                // 回复客户端
+                $ret_info = array(
+                    'status' => 250,
+                    'msg'    => 'Ok'
+                );
+            }
+        }
         return $ret_info;
     }
 
@@ -384,7 +394,7 @@ class Smtp_Server
 
     /**
      * 处理 退出
-     * @param  [type] $param    [description]
+     * @param  [type] $msg        [description]
      * @param  [type] &$user_data [description]
      * @return [type]             [description]
      */
@@ -396,6 +406,21 @@ class Smtp_Server
             'msg'    => 'Bye'
         );
     }
+
+    /**
+     * 测试消息
+     * @param  [type] $msg        [description]
+     * @param  [type] &$user_data [description]
+     * @return [type]             [description]
+     */
+    public function cmd_test($msg, &$user_data)
+    {
+        $ret_data =
+
+
+        var_dump($ret_data);
+    }
+
 
 
 }

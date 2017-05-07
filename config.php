@@ -22,5 +22,5 @@ return array(
     ),
 
     //**** 自有域名后缀 ****//
-    'MY_DOMAIN' => explode('|', 'm.qs5.org|'),
+    'MY_DOMAIN' => explode('|', 'm.qs5.org|testredmail.org.cn'),
 );
