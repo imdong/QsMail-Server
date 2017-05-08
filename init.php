@@ -49,18 +49,17 @@ echo "+-----------------------+\n";
     $run_pid = posix_getpid();
     file_put_contents(RUN_PID_FILE, $run_pid) || die("save pid File Error.\n");
 
-    // 获取启动时间
-    $run_timeStr = date('Y/m/d H:i:s');
+    // 打印启动信息
     printf(
         "[RunInit] %s\n\tRun Pid: %s\n",
-        $run_timeStr,
+        date('Y/m/d H:i:s'),
         $run_pid
     );
 
 //**** 运行前初始化 ****//
 
     // 判断是否传递后台运行命令
-    $isRun = !empty($argv['1']) && $argv['1'] == 'start';
+    $is_run = !empty($argv['1']) && $argv['1'] == 'start';
 
     // 判断是否传入日志文件名
     if(empty($argv['2'])){
@@ -72,7 +71,7 @@ echo "+-----------------------+\n";
     }
 
     // 根据运行情况设置调试模式
-    define('IS_DEBUG', !$isRun && $is_debug );
+    define('IS_DEBUG', !$is_run && $is_debug );
 
 //**** 启动进程 ****//
 
@@ -80,7 +79,7 @@ echo "+-----------------------+\n";
     require APP_ROOT . 'Mail_Server.class.php';
 
     // 启动服务器
-    $mail = new Mail_Server($isRun, $log_file);
+    $mail = new Mail_Server($is_run, $log_file);
 
     // 设置监听协议
     $mail->set('class_list',
@@ -107,11 +106,11 @@ echo "+-----------------------+\n";
 
     // 启动服务器 并检测错误
     if(!$mail->start()){
-        if($errorInfo = $mail->getError()){
+        if($error_info = $mail->getError()){
             printf(
                 "[RunError] (%s): %s\n",
-                $errorInfo['no'],
-                $errorInfo['msg']
+                $error_info['no'],
+                $error_info['msg']
             );
             return;
         }

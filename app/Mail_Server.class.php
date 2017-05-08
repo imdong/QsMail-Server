@@ -23,7 +23,7 @@ class Mail_Server
      * 运行时状态 / 是否后台运行
      * @var boolean
      */
-    private $isRunStatus = false;
+    private $is_run_status = false;
 
     /**
      * Swoole服务对象
@@ -33,13 +33,13 @@ class Mail_Server
 
     /**
      * 错误代码
-     * @var [type]
+     * @var integer
      */
     private $error_no;
 
     /**
      * 错误描述
-     * @var [type]
+     * @var string
      */
     private $error_msg;
 
@@ -48,6 +48,12 @@ class Mail_Server
      * @var array
      */
     private $class_list = array();
+
+    /**
+     * 监听协议列表
+     * @var swoole_server_port
+     */
+    private $listen_list;
 
     /**
      * 运行时用户信息暂存
@@ -63,13 +69,13 @@ class Mail_Server
 
     /**
      * 初始化函数
-     * @param boolean $isRun    是否后台运行
+     * @param boolean $is_run   是否后台运行
      * @param string  $log_file 输出日志文件地址
      */
-    function __construct($isRun, $log_file)
+    function __construct($is_run, $log_file)
     {
         // 保存运行时状态
-        $this->isRunStatus = $isRun;
+        $this->is_run_status = $is_run;
 
         // 修改进程名
         swoole_set_process_name("qsmail server start");
@@ -79,7 +85,7 @@ class Mail_Server
 
         // 设置默认值
         $this->serv->set(array(
-            'daemonize'                => $this->isRunStatus,    // 守护进程化 设置为 true 则后台运行
+            'daemonize'                => $this->is_run_status,    // 守护进程化 设置为 true 则后台运行
             'log_file'                 => $log_file,   // 日志文件
             'open_eof_check'           => true,     // 打开buffer缓冲区
             'package_eof'              => "\r\n",   // 设置EOF
@@ -141,10 +147,10 @@ class Mail_Server
 
     /**
      * 设置错误信息
-     * @param [type] $error_no  [description]
-     * @param [type] $error_msg [description]
+     * @param integer $error_no  [description]
+     * @param string  $error_msg [description]
      */
-    public function setError($error_no, $error_msg)
+    public function setError($error_no = 0, $error_msg = '')
     {
         $this->error_no  = $error_no;
         $this->error_msg = $error_msg;
@@ -152,13 +158,13 @@ class Mail_Server
 
     /**
      * 获取错误代码
-     * @return [type] [description]
+     * @return array 错误代码与错误描述
      */
     public function getError()
     {
         return !$this->error_no
         ? false
-        :array(
+        : array(
             'no'  => $this->error_no,
             'msg' => $this->error_msg
         );
@@ -166,7 +172,8 @@ class Mail_Server
 
     /**
      * 设置选项
-     * @param string $value [description]
+     * @param string $name  选项名 如果是数组则批量修改
+     * @param mixed  $value 值
      */
     public function set($name, $value = null)
     {
@@ -182,8 +189,8 @@ class Mail_Server
 
     /**
      * 保存配置信息
-     * @param  string $value [description]
-     * @return [type]        [description]
+     * @param  string $name  配置名
+     * @param  string $value 配置值
      */
     private function saveConfig($name, $value)
     {
@@ -254,12 +261,12 @@ class Mail_Server
     {
 
         // 遍历每个协议并处理
-        foreach ($this->class_list as $port => $classInfo) {
+        foreach ($this->class_list as $port => $class_info) {
             // 获取处理类名
-            $type_name = $classInfo['class'];
+            $type_name = $class_info['class'];
 
             // 监听并获取错误
-            if(!$this->listenList[$type_name] = $this->serv->listen($classInfo['host'], $port, $classInfo['type'])){
+            if(!$this->listen_list[$type_name] = $this->serv->listen($class_info['host'], $port, $class_info['type'])){
                 $this->setError(1, 'Add Listen Failed. Address already in use.');
                 return;
             }
@@ -275,16 +282,13 @@ class Mail_Server
      */
     public function onStart(swoole_server $serv)
     {
-        // 获取启动时间
-        $timeStr = date('Y/m/d H:i:s');
-
         // 如果是后台运行就重新保存pid
-        $this->isRunStatus && file_put_contents(RUN_PID_FILE, $serv->master_pid);
+        $this->is_run_status && file_put_contents(RUN_PID_FILE, $serv->master_pid);
 
         // 输出运行信息
         printf(
             "[MainStart] %s\n\tmaster_pid: %s\n\tRand Port: %s\n",
-            $timeStr,
+            date('Y/m/d H:i:s'),
             $serv->master_pid,
             $serv->port
         );
@@ -300,13 +304,10 @@ class Mail_Server
      */
     public function onManagerStart(swoole_server $serv)
     {
-        // 获取启动时间
-        $timeStr = date('Y/m/d H:i:s');
-
         // 输出运行信息
         printf(
             "[ManagerStart] %s\n\tmanager_pid: %s\n",
-            $timeStr,
+            date('Y/m/d H:i:s'),
             $serv->manager_pid
         );
 
@@ -322,9 +323,6 @@ class Mail_Server
      */
     public function onWorkerStart(swoole_server $serv, $worker_id)
     {
-        // 获取启动时间
-        $timeStr = date('Y/m/d H:i:s');
-
         // 重命名进程名
         if($serv->taskworker) {
             swoole_set_process_name("qsmail server task worker");
@@ -333,26 +331,26 @@ class Mail_Server
         }
 
         // 创建应用对象
-        $this->Mail_App = new Mail_App($serv);
+        $this->mail_app = new Mail_App($serv);
 
         // 输出调试信息
         $print_str = sprintf(
             "[WorkerStart: %s] %s\n\tworker_pid: %s\n\tMian Ver: %s\n\tApp Ver: %s\n",
             $worker_id,
-            $timeStr,
+            date('Y/m/d H:i:s'),
             $serv->worker_pid,
             $this->ver,
-            $this->Mail_App->ver()
+            $this->mail_app->ver()
         );
 
         // 输出各个协议的情况
-        foreach ($this->class_list as $port => $classInfo) {
+        foreach ($this->class_list as $port => $class_info) {
             // 获取处理类名
-            $type_name = $classInfo['class'];
+            $type_name = $class_info['class'];
 
             // 创建处理的对象
             $class_name = "{$type_name}_Server";
-            isset($this->$type_name) ?: $this->$type_name = new $class_name($this->Mail_App);
+            isset($this->$type_name) ?: $this->$type_name = new $class_name($this->mail_app);
 
             // 打印对象信息
             $print_str.= sprintf(
@@ -381,14 +379,14 @@ class Mail_Server
     public function onConnect(swoole_server $serv, $fd, $from_id)
     {
         // 获取客户端详细信息
-        $cliInfo = $serv->connection_info($fd, $from_id);
+        $cli_info = $serv->connection_info($fd, $from_id);
 
         // 创建消息记录数组
-        $class_name = $this->class_list[$cliInfo['server_port']]['class'];
+        $class_name = $this->class_list[$cli_info['server_port']]['class'];
         $user_data = array(
             'username'    => "u_{$fd}", // 临时用户名
-            'client_ip'   => $cliInfo['remote_ip'],     // 客户端IP
-            'client_port' => $cliInfo['remote_port'],   // 客户端端口
+            'client_ip'   => $cli_info['remote_ip'],     // 客户端IP
+            'client_port' => $cli_info['remote_port'],   // 客户端端口
             'class_type'  => $class_name,       // 使用协议版本
         );
 

@@ -1,6 +1,7 @@
 <?php
 /**
- * 禁止转换
+ * 进制转换类
+ * @author 野马
  */
 class JinZhi {
     const KeyCode = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';

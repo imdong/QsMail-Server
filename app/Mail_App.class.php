@@ -216,10 +216,10 @@ class Mail_App
             $password
         );
         // 执行查询
-        $userList = $this->db_query($sql);
+        $user_list = $this->db_query($sql);
 
         // 判断是否有这个用户
-        return $userList->num_rows >= 1;
+        return $user_list->num_rows >= 1;
     }
 
     /**
@@ -236,8 +236,8 @@ class Mail_App
         );
 
         // 解析邮件地址
-        $regEx = '#^(?<user_b>[a-z0-9]{6,})?(?:[^@]+)?@(?<domain>(?:(?<user_a>[a-z0-9]{6,})\.)?(?<domain_main>[a-z0-9\.\-]+\.[a-z]+))$#';
-        if(!preg_match($regEx, $email, $email_info)){
+        $regex = '#^(?<user_b>[a-z0-9]{6,})?(?:[^@]+)?@(?<domain>(?:(?<user_a>[a-z0-9]{6,})\.)?(?<domain_main>[a-z0-9\.\-]+\.[a-z]+))$#';
+        if(!preg_match($regex, $email, $email_info)){
             $ret_data['msg'] = 'Email addr error';
             return $ret_data;
         }
@@ -363,13 +363,8 @@ class Mail_App
             implode('\', \'', $dele_list)
         );
 
-        // 执行一次sql查询
-        $ret_data = false;
-        if($this->db->query($sql)){
-            $ret_data = $this->db->affected_rows;
-        }
-
-        return $ret_data;
+        // 执行并返回结果
+        return $this->db_query($sql, 'DELETE');
     }
 
     /**
@@ -439,10 +434,10 @@ class Mail_App
         // }
 
         // 拼接数组
-        $sql_valueStr = implode(",\n", $sql_value);
+        $sql_value_str = implode(",\n", $sql_value);
 
         // 拼接 sql语句
-        $sql.= $sql_valueStr . ';';
+        $sql.= $sql_value_str . ';';
 
         // 插入到数据库
         $ret = $this->db_query($sql, 'UPDATE');

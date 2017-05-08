@@ -22,19 +22,16 @@ class Pop3_Server
      * 邮件处理应用
      * @var Mail_App
      */
-    private $App;
+    private $mail_app;
 
     /**
      * 创建时初始化
-     * @param Mail_App $App [description]
+     * @param Mail_App $mail_app [description]
      */
-    function __construct(Mail_App $App)
+    function __construct(Mail_App $mail_app)
     {
-        // 输出调试记录
-        // IS_DEBUG && printf("[Pop3_Server] Create Success\n");
-
         // 保存App对象
-        $this->App = $App;
+        $this->mail_app = $mail_app;
     }
 
     /**
@@ -55,8 +52,8 @@ class Pop3_Server
      */
     private function exp_command($str)
     {
-        $regEx = '#(?:(?<s>[\'"])?(?<v>.+?)?(?:(?<!\\\\)\k<s>)|(?<u>[^\'"\s]+))#';
-        if(!preg_match_all($regEx, $str, $exp_list)) return false;
+        $regex = '#(?:(?<s>[\'"])?(?<v>.+?)?(?:(?<!\\\\)\k<s>)|(?<u>[^\'"\s]+))#';
+        if(!preg_match_all($regex, $str, $exp_list)) return false;
         $cmd = array();
         foreach ($exp_list['s'] as $id => $s) {
             $cmd[] = empty($s) ? $exp_list['u'][$id] : $exp_list['v'][$id];
@@ -155,10 +152,10 @@ class Pop3_Server
     public function onReceive(Mail_Server $mail, $fd, $data, &$user_data)
     {
         // 只取出第一条命令处理
-        $dataRow = explode("\r\n", $data)['0'];
+        $data_row = explode("\r\n", $data)['0'];
 
         // 解析命令行
-        $command = $this->exp_command($dataRow);
+        $command = $this->exp_command($data_row);
 
         // 解析是否成功
         if(!$command || !isset($command['0'])) return false;
@@ -194,7 +191,7 @@ class Pop3_Server
                 $dele_list[] = $mail_info['mail_id'];
             }
             // 走删除方法
-            $del_ret = $this->App->delete($dele_list);
+            $del_ret = $this->mail_app->delete($dele_list);
         }
 
         return array('status' => true, 'msg' => 'Bye!', 'close' => true);
@@ -221,7 +218,7 @@ class Pop3_Server
         // 保存用户名
         $user_data['user_name'] = $param['0'];
 
-        return array('status' => true, 'msg' => '[AUTH] Core mail');
+        return array('status' => true, 'msg' => '[AUTH] Ok continue');
     }
 
     /**
@@ -258,14 +255,14 @@ class Pop3_Server
         $user_data['user_pass'] = $param['0'];
 
         // 验证账号密码信息
-        $login_ret = $this->App->login($user_data['user_name'], $user_data['user_pass']);
+        $login_ret = $this->mail_app->login($user_data['user_name'], $user_data['user_pass']);
         if($login_ret){
             // 保存登录时间
             $user_data['login_time'] = date('Y-m-d H:i:s');
             // 修改状态
             $user_data['status'] = 'TRANSACTION';
             // 获取邮件列表
-            $mail_info = $this->App->get_mail_list($user_data['user_name']);
+            $mail_info = $this->mail_app->get_mail_list($user_data['user_name']);
             // 组织保存数据
             $user_data['mail_list']  = $mail_info['mail_list'];
             $user_data['dele_list']  = array(); // 待删除邮件列表
@@ -581,7 +578,7 @@ class Pop3_Server
             // 判断这个邮件是否存在
             if(isset($user_data['mail_list'][$mid])){
                 // 获取邮件正文
-                $mail_body = $this->App->get_mail_body($user_data['mail_list'][$mid]['mail_id']);
+                $mail_body = $this->mail_app->get_mail_body($user_data['mail_list'][$mid]['mail_id']);
                 // 拼接返回消息
                 $ret_data = array(
                     'status' => true,
@@ -636,7 +633,7 @@ class Pop3_Server
             // 判断这个邮件是否存在
             if(isset($user_data['mail_list'][$mid])){
                 // 获取邮件正文
-                $mail_body = $this->App->get_mail_body($user_data['mail_list'][$mid]['mail_id']);
+                $mail_body = $this->mail_app->get_mail_body($user_data['mail_list'][$mid]['mail_id']);
 
                 // 获取邮件前几行 从头信息后面找
                 $posi = stripos($mail_body, "\r\n\r\n") + 2;

@@ -22,19 +22,16 @@ class Smtp_Server
      * 邮件处理应用
      * @var Mail_App
      */
-    private $app;
+    private $mail_app;
 
     /**
      * 创建时初始化
-     * @param Mail_App &$app [description]
+     * @param Mail_App &$mail_app [description]
      */
-    function __construct(Mail_App $app)
+    function __construct(Mail_App $mail_app)
     {
-        // 输出调试记录
-        // IS_DEBUG && printf("[Smtp_Server] Create Success\n");
-
         // 保存App对象
-        $this->app = $app;
+        $this->mail_app = $mail_app;
     }
 
     /**
@@ -55,8 +52,8 @@ class Smtp_Server
      */
     private function exp_command($str)
     {
-        $regEx = '#^(?<cmd>[a-zA-Z]{4})(\s(?<msg>[^$]+)?)?$#';
-        if(!preg_match($regEx, $str, $exp_list)) return false;
+        $regex = '#^(?<cmd>[a-zA-Z]{4})(\s(?<msg>[^$]+)?)?$#';
+        if(!preg_match($regex, $str, $exp_list)) return false;
         return array(
             'cmd' => $exp_list['cmd'],
             'msg' => empty($exp_list['msg']) ? '' : $exp_list['msg']
@@ -125,13 +122,13 @@ class Smtp_Server
     public function onReceive(Mail_Server $mail, $fd, $datas, &$user_data)
     {
         // 始终假设存在粘包问题 拆开每一行单独处理
-        $dataArr = explode("\r\n", rtrim($datas));
+        $data_rows = explode("\r\n", rtrim($datas));
 
         // 设置返回消息
         $ret_msg_arr = array();
 
         // 对每一行依次处理
-        foreach ($dataArr as $data) {
+        foreach ($data_rows as $data) {
 
             // 判断是否在接收多行数据
             if($user_data['multi_mode']){
@@ -269,17 +266,15 @@ class Smtp_Server
         }
 
         // 获取发件人地址
-        if(!preg_match('#^FROM:\s*<(?<mail>[^>]+)>#i', $msg, $mailAddr)){
+        if(!preg_match('#^FROM:\s*<(?<mail>[^>]+)>#i', $msg, $mail_addr)){
             // 获取发件人地址失败
              $ret_info = array(
                 'status' => 501,
-                'msg'    => 'Error!'
+                'msg'    => 'Error: mail addr error'
             );
         } else {
-            // 获取发件人地址成功
-            echo "[Mail From] {$mailAddr['mail']}\n";
             // 保存发件人信息
-            $user_data['mail_from'] = trim($mailAddr['mail']);
+            $user_data['mail_from'] = trim($mail_addr['mail']);
             // 重置收件人列表
             $user_data['mail_rect'] = array();
             // 回复客户端
@@ -309,18 +304,15 @@ class Smtp_Server
         }
 
         // 获取收件人地址
-        if(!preg_match('#^TO:\s*<(?<mail>[^>]+)>#i', $msg, $mailAddr)){
+        if(!preg_match('#^TO:\s*<(?<mail>[^>]+)>#i', $msg, $mail_addr)){
             // 获取收件人地址失败
             $ret_info = array(
                 'status' => 501,
                 'msg'    => 'Error'
             );
         } else {
-            // 获取收件人地址成功
-            echo "[Rect To] {$mailAddr['mail']}\n";
-
             // 检查收件人归属
-            $mail_user = $this->app->exp_username($mailAddr['mail']);
+            $mail_user = $this->mail_app->exp_username($mail_addr['mail']);
             if(!$mail_user['status']){
                 $ret_info = array(
                     'status' => 550,
@@ -328,7 +320,7 @@ class Smtp_Server
                 );
             } else {
                 // 保存收件人信息
-                $user_data['mail_rect'][] = trim($mailAddr['mail']);
+                $user_data['mail_rect'][] = trim($mail_addr['mail']);
 
                 // 回复客户端
                 $ret_info = array(
@@ -363,11 +355,10 @@ class Smtp_Server
                 'msg'    => 'End data with <CR><LF>.<CR><LF>'
             );
         } else {
-            echo "[MailBody] {$data}\n";
-            $saveRet = true;
+            $save_ret = true;
 
             // 走保存邮件流程
-            $saveRet = $this->app->mailSave(
+            $save_ret = $this->mail_app->mailSave(
                 $user_data['mail_from'],
                 $user_data['mail_rect'],
                 $data,
@@ -375,17 +366,10 @@ class Smtp_Server
                 $user_data['client_from']
             );
 
-            // 输出保存结果
-            if($saveRet){
-                echo "[mailSave:{$user_data['username']}] Ok!\n";
-            } else {
-                echo "[mailSave:{$user_data['username']}] Error!\n";
-            }
-
             // 返回处理结果
             $ret_info = array(
-                'status'   => $saveRet ? 250 : 554,
-                'msg'    => $saveRet ? 'Ok' : 'Error',
+                'status'   => $save_ret ? 250 : 554,
+                'msg'    => $save_ret ? 'Ok' : 'Error',
             );
         }
 
