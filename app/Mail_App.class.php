@@ -148,9 +148,11 @@ class Mail_App
 
         // 如果出错是因为超时
         if(!$result && in_array($this->db->errno, array(2006, 2013))){
+
             // 连接到数据库
-            $this->mysqlConnect();
-            // 插入到数据库
+            $this->db_connect();
+
+            // 执行查询
             $result = $this->db->query($sql);
         }
 
