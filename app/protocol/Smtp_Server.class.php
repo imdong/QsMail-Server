@@ -146,7 +146,7 @@ class Smtp_Server
                     $user_data['buffer'] = substr($user_data['buffer'], 0, strlen($user_data['buffer']) - 5);
 
                     // 重新调用这个方法
-                    $ret_data = $this->$user_data['method_name']('', $user_data, $user_data['buffer']);
+                    $ret_data = $this->{$user_data['method_name']}('', $user_data, $user_data['buffer']);
 
                     // 清空缓存区
                     $user_data['buffer'] = '';
@@ -180,7 +180,7 @@ class Smtp_Server
                     // 记住当前方法
                     $user_data['method_name'] = $method_name;
                     // 调用方法
-                    $ret_data = $this->$method_name($command['msg'], $user_data);
+                    $ret_data = $this->{$method_name}($command['msg'], $user_data);
                 }
 
                 // 保存返回结果

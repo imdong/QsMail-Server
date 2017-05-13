@@ -100,8 +100,9 @@ class Mail_Server
             $file_list = array(
                 APP_ROOT . "protocol/{$class_name}.class.php",
                 APP_ROOT . "{$class_name}.class.php",
-                APP_ROOT . $class_name . '.php',
+                APP_ROOT . "{$class_name}.php",
             );
+
             // 挨个测试是否可以加载
             foreach ($file_list as $file_name) {
                 if(file_exists($file_name)){
@@ -196,7 +197,7 @@ class Mail_Server
     {
         // 对象存在就设置对象 否则设置 $serv
         if(isset($this->$name)){
-            $this->$name = $value;
+            $this->{$name} = $value;
         } else {
             // 设置serv设置
             $this->serv->setting[$name] = $value;
@@ -350,13 +351,13 @@ class Mail_Server
 
             // 创建处理的对象
             $class_name = "{$type_name}_Server";
-            isset($this->$type_name) ?: $this->$type_name = new $class_name($this->mail_app);
+            isset($this->{$type_name}) ?: $this->{$type_name} = new $class_name($this->mail_app);
 
             // 打印对象信息
             $print_str.= sprintf(
                 "\t%s Ver: %s\n",
                 $type_name,
-                $this->$type_name->ver()
+                $this->{$type_name}->ver()
             );
         }
 
@@ -400,7 +401,7 @@ class Mail_Server
         );
 
         // 调用方法处理
-        $ret_msg = $this->$class_name->onConnect($this, $fd, $user_data);
+        $ret_msg = $this->{$class_name}->onConnect($this, $fd, $user_data);
 
         // 输出调试记录
         IS_DEBUG && printf('(%s) %s: S > %s', $user_data['class_type'], $user_data['username'], $ret_msg);
@@ -427,8 +428,11 @@ class Mail_Server
         // 输出调试记录
         IS_DEBUG && printf("[Close] %s\n", $fd);
 
+        // 类型
+        $class_name = $user_data['class_type'];
+
         // 方法存在就调用处理
-        if(method_exists($this->$user_data['class_type'], 'onClose')){
+        if(method_exists($this->{$class_name}, 'onClose')){
             $this->$user_data['class_type']->onClose($this, $fd, $user_data);
         }
 
@@ -452,8 +456,11 @@ class Mail_Server
         // 输出调试记录
         IS_DEBUG && printf('(%s) %s: C < %s', $user_data['class_type'], $user_data['username'], $data);
 
+        // 类型
+        $class_name = $user_data['class_type'];
+
         // 转发给类处理
-        $ret_msg = $this->$user_data['class_type']->onReceive($this, $fd, $data, $user_data);
+        $ret_msg = $this->{$class_name}->onReceive($this, $fd, $data, $user_data);
 
         // 保存用户信息
         $this->userData($fd, $user_data);

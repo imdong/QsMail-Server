@@ -167,7 +167,7 @@ class Pop3_Server
         // 方法存在就调用
         $ret_data = array('status' => false, 'msg' => 'Unrecognized command');
         if(method_exists($this, $method_name)){
-            $ret_data = $this->$method_name($command, $user_data);
+            $ret_data = $this->{$method_name}($command, $user_data);
         }
 
         return $this->asData($ret_data);
@@ -229,13 +229,6 @@ class Pop3_Server
      */
     private function cmd_pass($param, &$user_data)
     {
-        // // 调试模式特殊处理
-        // if(IS_DEBUG){
-        //     $user_data['user_name'] = 'imdong';
-        //     $param['0'] = '123456';
-        //     $user_data['status'] = 'AUTHORIZATION';
-        // }
-
         // 非认证状态则返回错误
         if( 'AUTHORIZATION' != $user_data['status'] ){
             return array('status' => false, 'msg' => 'Unrecognized command');
